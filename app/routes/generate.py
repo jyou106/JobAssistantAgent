@@ -1,7 +1,6 @@
-# app/routes/generate.py
-
 from fastapi import APIRouter
 from pydantic import BaseModel
+from app.agent_core import generate_tailored_answer
 
 router = APIRouter()
 
@@ -11,6 +10,5 @@ class GenerateRequest(BaseModel):
 
 @router.post("/answer")
 def generate_answer(request: GenerateRequest):
-    return {
-        "answer": f"This is a mocked answer based on profile '{request.user_profile}' and job '{request.job_description}'"
-    }
+    response = generate_tailored_answer(request.user_profile, request.job_description)
+    return {"answer": response}
