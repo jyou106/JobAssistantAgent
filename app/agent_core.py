@@ -1,14 +1,11 @@
-from app.deepseek_client import call_deepseek
+from app.huggingface_client import call_huggingface
 
-def generate_tailored_answer(profile: str, job_desc: str):
-    prompt = f"""
-    Use the information below to generate a tailored answer for the question:
-    "Why are you a good fit for this role?"
+def generate_tailored_answer(profile: str, job: str) -> str:
+    prompt = (
+    "Write a tailored explanation of why the following user is a good fit for the job described.\n\n"
+    f"User Profile:\n{profile}\n\n"
+    f"Job Description:\n{job}\n\n"
+    "Tailored Explanation:")
 
-    User Profile:
-    {profile}
 
-    Job Description:
-    {job_desc}
-    """
-    return call_deepseek(prompt)
+    return call_huggingface(prompt)

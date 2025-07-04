@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environment
+venv/
+ENV/
+env/
+
+# VSCode settings
+.vscode/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+.env.*
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Pytest / Coverage / Logs
+*.log
+*.coverage
+htmlcov/
+.cache/
+.pytest_cache/
+
+# HuggingFace cache (optional)
+~/.cache/huggingface/
+
+# MyPy / Pylint
+.mypy_cache/
+.pylint.d/
+
+# __init__.pyc files or other build artifacts
+build/
+dist/
+*.egg-info/
