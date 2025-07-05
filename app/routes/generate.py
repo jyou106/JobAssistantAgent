@@ -1,18 +1,16 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from app.huggingface_client import call_huggingface
+from app.gpt4all_client import call_gpt4all
 
 router = APIRouter()
 
 class GenerateRequest(BaseModel):
-    user_profile: str
-    job_description: str
+    prompt: str
 
 class GenerateResponse(BaseModel):
     generated_text: str
 
 @router.post("/api/generate/answer", response_model=GenerateResponse)
 def generate_answer(request: GenerateRequest):
-    prompt = f"User profile: {request.user_profile}\nJob description: {request.job_description}"
-    generated_text = call_huggingface(prompt)
-    return GenerateResponse(generated_text=generated_text)
+    response = call_gpt4all(request.prompt)
+    return GenerateResponse(generated_text=response)
