@@ -3,4 +3,11 @@ __pycache__/
 venv/
 .env
 .vscode/
-models/*.bin
+# Ignore models folder and model files
+/models/
+*.gguf
+*.bin
+*.pt
+*.pth
+*.ckpt
+

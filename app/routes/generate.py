@@ -7,6 +7,14 @@ router = APIRouter()
 class GenerateRequest(BaseModel):
     prompt: str
 
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "prompt": "What are good projects for a beginner Python programmer?"
+            }
+        }
+
+
 class GenerateResponse(BaseModel):
     generated_text: str
 
