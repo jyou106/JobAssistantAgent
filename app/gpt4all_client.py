@@ -1,7 +1,7 @@
 from pathlib import Path
 from gpt4all import GPT4All
 
-MODEL_PATH = Path(__file__).resolve().parent.parent / "models" / "mistral-7b-instruct-v0.1.Q4_0.gguf"
+MODEL_PATH = Path(__file__).resolve().parent.parent / "models" / "gpt4all-lora-quantized.bin"
 
 _model_instance = None
 

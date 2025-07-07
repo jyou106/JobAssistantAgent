@@ -2,3 +2,5 @@ fastapi
 uvicorn
 gpt4all
 pydantic
+requests
+tqdm
