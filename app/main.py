@@ -57,6 +57,5 @@ async def get_user(userId: str):
     logger.info(f"Fetched user {userId}")
     return UserResponse(userId=userId, **user)
 
-# Include other routers for resume and generate endpoints
 app.include_router(resume_router)
 app.include_router(generate_router)

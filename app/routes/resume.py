@@ -16,7 +16,7 @@ class ResumeRequest(BaseModel):
 
 @router.post("/api/resume/analyze")
 def analyze_resume(request: ResumeRequest):
-    # You can plug in your GPT4All analysis logic here later
+    # Add to this later to make it not hardcoded. 
     return {
         "score": 85,
         "feedback": "Your resume demonstrates strong backend experience. Highlight specific projects and metrics for greater impact."

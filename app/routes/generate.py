@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from app.gpt4all_client import call_gpt4all
+from app.ai import call_fireworks
 
 router = APIRouter()
 
@@ -14,11 +14,10 @@ class GenerateRequest(BaseModel):
             }
         }
 
-
 class GenerateResponse(BaseModel):
     generated_text: str
 
 @router.post("/api/generate/answer", response_model=GenerateResponse)
 def generate_answer(request: GenerateRequest):
-    response = call_gpt4all(request.prompt)
+    response = call_fireworks(request.prompt)
     return GenerateResponse(generated_text=response)
