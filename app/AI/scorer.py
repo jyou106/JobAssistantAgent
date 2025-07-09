@@ -59,7 +59,7 @@ Return ONLY a JSON object like this example:
     )
     result_str = response.choices[0].message.content
 
-    print("🔥 Raw model response:\n", repr(result_str))
+    print("Raw model response:\n", repr(result_str))
 
     # Attempt to extract JSON from response
     json_match = re.search(r"```json\s*({[\s\S]*?})\s*```", result_str)
@@ -70,13 +70,13 @@ Return ONLY a JSON object like this example:
         try:
             json_text = json_match.group(1) if json_match.lastindex else json_match.group(0)
             result_json = json.loads(json_text)
-            print("✅ Scoring complete:", result_json)
+            print("Scoring complete:", result_json)
             return result_json
         except json.JSONDecodeError:
-            print("❌ Failed to parse JSON:", json_text)
+            print("Failed to parse JSON:", json_text)
             raise
     else:
-        print("❌ Failed to extract JSON from model output:", result_str)
+        print("Failed to extract JSON from model output:", result_str)
         raise ValueError("No JSON found in model output")
 
 
