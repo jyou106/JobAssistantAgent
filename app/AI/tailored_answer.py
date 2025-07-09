@@ -3,9 +3,13 @@ from .scraper import scrape_job_description
 from langchain.tools import tool
 import json
 import re
+from dotenv import load_dotenv
+import os
 
-# Set your Fireworks API key
-FIREWORKS_API_KEY = "fw_3ZT4iwybrTCAcpcVEwTeGSv7"
+load_dotenv()
+FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY")
+if not FIREWORKS_API_KEY:
+    raise RuntimeError("FIREWORKS_API_KEY not set in environment variables or .env file.")
 fw = Fireworks(api_key=FIREWORKS_API_KEY)
 
 def tailored_answer(profile_text: str, job_posting_url: str, questions: list) -> dict:
@@ -13,7 +17,7 @@ def tailored_answer(profile_text: str, job_posting_url: str, questions: list) ->
     system_prompt = (
         "You are a career coach AI. Given a user profile, a job description, and a list of application questions, "
         "write a compelling answer for each question. "
-        "Return JSON: {\"answers\": [{\"question\": str, \"answer\": str}, ...]}"
+        "Return JSON: {\"answers\": [{\"question\": str, \"answer\": str}], \"overall_quality_score\": float}"
     )
     user_prompt = f"""Profile:\n{profile_text}\n\nJob Description:\n{job_description_text}\n\nQuestions:\n{questions}\n"""
 
@@ -33,7 +37,10 @@ def tailored_answer(profile_text: str, job_posting_url: str, questions: list) ->
         return result_json
     else:
         print("Failed to extract JSON from model output:", result_str)
-        raise ValueError("No JSON found in model output")
+        return {
+            "error": "Could not parse output as JSON. Check model output formatting.",
+            "raw_output": result_str
+        }
 
 @tool("tailored_answer")
 def tailored_answer_tool(profile_text: str, job_posting_url: str, questions: list) -> dict:

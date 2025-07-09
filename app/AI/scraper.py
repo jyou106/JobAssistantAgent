@@ -5,7 +5,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from bs4 import BeautifulSoup
 import time
-from langchain.tools import tool
+from pydantic import BaseModel
+
+class ScrapeJobInput(BaseModel):
+    url: str
 
 def fetch_job_description_and_qualifications(url: str) -> dict:
     """
@@ -21,25 +24,25 @@ def fetch_job_description_and_qualifications(url: str) -> dict:
 
     try:
         driver.get(url)
-        time.sleep(3)  # Wait for JS to load. Adjust if needed.
+        time.sleep(3)
         soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        jd_div = soup.find("div", attrs={"data-automation-id": "jobPostingDescription"})
+        jd_div = soup.find("div", attrs={"data-automation-id": "jobPostingDescription"})  # Workday
+        if jd_div is None:
+            jd_div = soup.find("div", class_="jobsearch-JobComponent-description")  # Indeed fallback
+
         description = None
         qualifications = None
 
         if jd_div:
-            # --- Job Description Extraction ---
             collecting_desc = False
             desc_lines = []
             for elem in jd_div.descendants:
                 if hasattr(elem, "get_text"):
                     text = elem.get_text(strip=True).lower()
-                    # Start collecting after "general responsibilities" or "responsibilities"
                     if "responsibilit" in text and not collecting_desc:
                         collecting_desc = True
                         continue
-                    # Stop at next major section
                     if collecting_desc and ("about you" in text or "workday pay transparency" in text or "our approach to flexible work" in text):
                         break
                     if collecting_desc and elem.name in ["p", "ul", "ol", "li"]:
@@ -49,17 +52,14 @@ def fetch_job_description_and_qualifications(url: str) -> dict:
             if desc_lines:
                 description = "\n".join(desc_lines)
 
-            # --- Qualifications Extraction ---
             collecting_qual = False
             qual_lines = []
             for elem in jd_div.descendants:
                 if hasattr(elem, "get_text"):
                     text = elem.get_text(strip=True).lower()
-                    # Start collecting after "about you"
                     if "about you" in text and not collecting_qual:
                         collecting_qual = True
                         continue
-                    # Stop at next major section
                     if collecting_qual and ("workday pay transparency" in text or "our approach to flexible work" in text):
                         break
                     if collecting_qual and elem.name in ["p", "ul", "ol", "li"]:
@@ -81,8 +81,9 @@ def fetch_job_description_and_qualifications(url: str) -> dict:
     finally:
         driver.quit()
 
-@tool("scrape_job_description")
 def scrape_job_description(url: str) -> str:
-    """Scrape and return the full job description including qualifications as a single string."""
+    """
+    Scrape and return the full job description including qualifications as a single string.
+    """
     result = fetch_job_description_and_qualifications(url)
     return result["full_text"]

@@ -1,35 +1,28 @@
 from fastapi import APIRouter, HTTPException
 from app.AI.agent import score_resume_workflow, tailored_answer_workflow, comprehensive_workflow
 from app.AI.schemas import ResumeScoreInputLegacy, TailoredAnswerInputLegacy
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
+import asyncio
+from app.AI.scorer import score_resume
 
 router = APIRouter()
 
-# Pydantic model with example
-class ResumeRequest(BaseModel):
+class ScoreRequest(BaseModel):
     resume_text: str
-
-    class Config:
-        json_schema_extra  = {
-            "example": {
-                "resume_text": "Experienced software engineer with a focus on backend development, Python, and system design."
-            }
-        }
-
-# For comprehensive workflow (resume_text, job_posting_url, questions)
-class ComprehensiveInputLegacy(BaseModel):
-    resume_text: str
-    job_posting_url: str
-    questions: list = None
-
+    job_posting_url: HttpUrl  # validates URL format
 
 @router.post("/score")
-def score_resume(request: ResumeScoreInputLegacy):
+async def score_route(payload: ScoreRequest):
     try:
-        result = score_resume_workflow(request.resume_text, request.job_posting_url)
-        return {"result": result}
+        print("Received scoring request")
+        # Convert job_posting_url to str before passing
+        result = await asyncio.to_thread(score_resume, payload.resume_text, str(payload.job_posting_url))
+        print("Scoring complete:", result)
+        return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print("Exception during scoring:", e)
+        raise HTTPException(status_code=500, detail="Scoring workflow did not return valid JSON")
+
 
 @router.post("/tailored-answers")
 def get_tailored_answers(request: TailoredAnswerInputLegacy):
@@ -37,6 +30,6 @@ def get_tailored_answers(request: TailoredAnswerInputLegacy):
     return {"result": result}
 
 @router.post("/comprehensive")
-def comprehensive(request: ComprehensiveInputLegacy):
+def comprehensive(request: ResumeScoreInputLegacy):
     result = comprehensive_workflow(request.resume_text, request.job_posting_url, request.questions)
     return {"result": result}
