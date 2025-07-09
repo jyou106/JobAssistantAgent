@@ -3,3 +3,13 @@ uvicorn
 pydantic
 python-dotenv
 requests
+langchain
+transformers
+accelerate
+beautifulsoup4
+selenium
+webdriver-manager
+langchain-community
+langchain-huggingface
+fireworks-ai
+langchain-fireworks

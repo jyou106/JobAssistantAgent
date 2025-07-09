@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from app.AI.agent import score_resume_workflow, tailored_answer_workflow, comprehensive_workflow
+from app.AI.schemas import ResumeScoreInputLegacy, TailoredAnswerInputLegacy
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -14,10 +16,27 @@ class ResumeRequest(BaseModel):
             }
         }
 
-@router.post("/api/resume/analyze")
-def analyze_resume(request: ResumeRequest):
-    # Add to this later to make it not hardcoded. 
-    return {
-        "score": 85,
-        "feedback": "Your resume demonstrates strong backend experience. Highlight specific projects and metrics for greater impact."
-    }
+# For comprehensive workflow (resume_text, job_posting_url, questions)
+class ComprehensiveInputLegacy(BaseModel):
+    resume_text: str
+    job_posting_url: str
+    questions: list = None
+
+
+@router.post("/score")
+def score_resume(request: ResumeScoreInputLegacy):
+    try:
+        result = score_resume_workflow(request.resume_text, request.job_posting_url)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/tailored-answers")
+def get_tailored_answers(request: TailoredAnswerInputLegacy):
+    result = tailored_answer_workflow(request.profile_text, request.job_posting_url, request.questions)
+    return {"result": result}
+
+@router.post("/comprehensive")
+def comprehensive(request: ComprehensiveInputLegacy):
+    result = comprehensive_workflow(request.resume_text, request.job_posting_url, request.questions)
+    return {"result": result}
