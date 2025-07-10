@@ -35,7 +35,7 @@ score_resume_structured = StructuredTool.from_function(
         "Input object must contain: resume_text (string) and "
         "job_posting_url (string). Returns match_score and insights."
     ),
-    return_direct=True  
+    return_direct=False
 )
 
 

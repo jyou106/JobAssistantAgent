@@ -22,12 +22,25 @@ def score_resume(resume_text, job_posting_url):
         raise ValueError("Scraped job description is empty or too short.")
     print("Scraped job description (first 300 chars):", job_description_text[:300])
 
+    RUBRIC = """
+        Score buckets (use skill_overlap_ratio = intersection / required):
+        0.9-1.0  - 90-100 % of required skills AND 80 % experience match
+        0.7-0.9  - 70-89 % skills OR experience match
+        0.5-0.7  - 50-69 % match
+        0.3-0.5  - 30-49 % match
+        <0.3     - little relevance
+    """
     system_prompt = (
-        "You are an AI assistant that MUST respond ONLY with a single JSON object "
-        "with exactly two keys: "
-        "\"match_score\" (a float from 0.0 to 1.0), and "
-        "\"insights\" (an array of short strings). "
-        "Do NOT include any other text or explanation."
+        "You are an ATS-style scorer.\n"
+        "First, read the job description and extract a JSON array REQUIRED_SKILLS "
+        "(max 20 items, lowercase single words/phrases).\n"
+        "Then read the resume and extract PRESENT_SKILLS the same way.\n"
+        "Compute skill_overlap_ratio = |intersection| / |REQUIRED_SKILLS| (round 2 dp).\n"
+        f"{RUBRIC}\n"
+        "Finally, output ONLY the JSON object "
+        "{\"match_score\": <float>, \"insights\": [<short strings>]}.\n"
+        "Do NOT output REQUIRED_SKILLS or PRESENT_SKILLS."
+        "Respond with ONLY the JSON object, inside a ```json code block, and nothing else."
     )
 
     user_prompt = f"""
@@ -37,15 +50,7 @@ Resume:
 Job Description:
 {job_description_text}
 
-Return ONLY a JSON object like this example:
 
-{{
-  "match_score": 0.75,
-  "insights": [
-    "Experience with Python",
-    "Familiarity with FastAPI"
-  ]
-}}
 """
 
     response = fw.chat.completions.create(
