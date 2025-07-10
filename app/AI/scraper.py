@@ -11,10 +11,6 @@ class ScrapeJobInput(BaseModel):
     url: str
 
 def fetch_job_description_and_qualifications(url: str) -> dict:
-    """
-    Uses Selenium to fetch and extract the main job description and qualifications from a job posting URL.
-    Looks for 'About the role' and 'About you' sections.
-    """
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
@@ -27,57 +23,39 @@ def fetch_job_description_and_qualifications(url: str) -> dict:
         time.sleep(3)
         soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        jd_div = soup.find("div", attrs={"data-automation-id": "jobPostingDescription"})  # Workday
-        if jd_div is None:
-            jd_div = soup.find("div", class_="jobsearch-JobComponent-description")  # Indeed fallback
+        # Job boards
+        possible_divs = [
+            {"attrs": {"data-automation-id": "jobPostingDescription"}},       # Workday
+            {"class_": "jobsearch-JobComponent-description"},                 # Indeed
+            {"class_": "description"},                                        # Greenhouse
+            {"class_": "section page-centered"},                              # Lever
+            {"id": "job-description"},                                        # generic
+        ]
 
-        description = None
-        qualifications = None
+        jd_div = None
+        for div_selector in possible_divs:
+            jd_div = soup.find("div", **div_selector)
+            if jd_div:
+                break
 
-        if jd_div:
-            collecting_desc = False
-            desc_lines = []
-            for elem in jd_div.descendants:
-                if hasattr(elem, "get_text"):
-                    text = elem.get_text(strip=True).lower()
-                    if "responsibilit" in text and not collecting_desc:
-                        collecting_desc = True
-                        continue
-                    if collecting_desc and ("about you" in text or "workday pay transparency" in text or "our approach to flexible work" in text):
-                        break
-                    if collecting_desc and elem.name in ["p", "ul", "ol", "li"]:
-                        line = elem.get_text(separator=" ", strip=True)
-                        if line and line not in desc_lines:
-                            desc_lines.append(line)
-            if desc_lines:
-                description = "\n".join(desc_lines)
+        # Fallback: longest div
+        if not jd_div:
+            divs = soup.find_all("div")
+            jd_div = max(divs, key=lambda d: len(d.get_text(strip=True)), default=None)
 
-            collecting_qual = False
-            qual_lines = []
-            for elem in jd_div.descendants:
-                if hasattr(elem, "get_text"):
-                    text = elem.get_text(strip=True).lower()
-                    if "about you" in text and not collecting_qual:
-                        collecting_qual = True
-                        continue
-                    if collecting_qual and ("workday pay transparency" in text or "our approach to flexible work" in text):
-                        break
-                    if collecting_qual and elem.name in ["p", "ul", "ol", "li"]:
-                        line = elem.get_text(separator=" ", strip=True)
-                        if line and line not in qual_lines:
-                            qual_lines.append(line)
-            if qual_lines:
-                qualifications = "\n".join(qual_lines)
+        if not jd_div:
+            return {"description": None, "qualifications": None, "full_text": ""}
 
-        full_text = description or ""
-        if qualifications:
-            full_text += f"\n\nQualifications:\n{qualifications}"
+        lines = []
+        for elem in jd_div.descendants:
+            if elem.name in ["p", "li", "ul", "ol"] and hasattr(elem, "get_text"):
+                line = elem.get_text(separator=" ", strip=True)
+                if line and line not in lines:
+                    lines.append(line)
 
-        return {
-            "description": description,
-            "qualifications": qualifications,
-            "full_text": full_text.strip()
-        }
+        full_text = "\n".join(lines)
+        return {"description": full_text, "qualifications": None, "full_text": full_text}
+
     finally:
         driver.quit()
 
