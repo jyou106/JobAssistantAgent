@@ -22,8 +22,6 @@ A FastAPI-based backend application that helps job seekers optimize their applic
 
 ## Getting Started
 
-### 1. Clone the repository
-
 ```bash
 git clone https://github.com/your-username/JobAssistantAgent.git
 cd JobAssistantAgent
