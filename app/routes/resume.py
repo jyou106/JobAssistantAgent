@@ -26,8 +26,25 @@ async def score_route(payload: ScoreRequest):
 
 @router.post("/tailored-answers")
 def get_tailored_answers(request: TailoredAnswerInputLegacy):
-    result = tailored_answer_workflow(request.profile_text, request.job_posting_url, request.questions)
-    return {"result": result}
+    result = tailored_answer_workflow(
+        request.profile_text,
+        request.job_posting_url,
+        request.questions
+    )
+
+    # Check if the result is a dict and structured as expected
+    if isinstance(result, dict):
+        if result.get("success"):
+            return {"result": result["data"]}
+        else:
+            return {
+                "error": result.get("error", "Unknown error occurred"),
+                "raw_output": result.get("raw_output")
+            }
+    else:
+        # fallback for unexpected return type (e.g. str)
+        print("[TAILORED] Unexpected result type:", type(result))
+        raise HTTPException(status_code=500, detail="Unexpected result format from tailored_answer_workflow")
 
 @router.post("/comprehensive")
 def comprehensive(request: ResumeScoreInputLegacy):
