@@ -8,7 +8,7 @@ from langchain.agents import initialize_agent, AgentType, AgentExecutor
 from langchain_community.chat_models import ChatOpenAI
 from langchain.tools import Tool, StructuredTool          
 from .scraper import scrape_job_description
-from .scorer import score_resume_tool
+from .scorer import score_resume_tool, score_resume
 from .tailored_answer import tailored_answer, tailored_answer_tool
 from .schemas import (
     UserProfile, ResumeScoreInput, TailoredAnswerInput,
@@ -17,7 +17,8 @@ from .schemas import (
 from fireworks.client import Fireworks
 from langchain_fireworks.chat_models import ChatFireworks
 from app.AI.scraper import ScrapeJobInput  
-import json
+import json 
+
 
 load_dotenv()
 FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY")
@@ -95,23 +96,31 @@ def score_resume_workflow(resume_text: str, job_posting_url: str):
     result = agent.run(prompt)
     return result
 
-def tailored_answer_workflow(profile_text: str, job_posting_url: str, questions: list):
-    result = tailored_answer(profile_text, job_posting_url, questions)
 
-    if isinstance(result, dict):
-        if result.get("success"):
-            return {"success": True, "data": result["data"]}
-        else:
-            return {
-                "success": False,
-                "error": result.get("error", "Unknown error occurred"),
-                "raw_output": result.get("raw_output")
+def tailored_answer_workflow(profile_text: str, job_posting_url: str, questions: list):
+    # Step 1: Call tailored answer
+    answer_result = tailored_answer(profile_text, job_posting_url, questions)
+
+    # Step 2: Also call resume scoring to reuse the match_score
+    try:
+        match_result = score_resume(profile_text, job_posting_url)
+        match_score = match_result.get("match_score", None)
+    except Exception as e:
+        match_score = None  # fallback if scoring fails
+
+    if isinstance(answer_result, dict) and answer_result.get("success"):
+        return {
+            "success": True,
+            "data": {
+                "match_score": match_score,
+                "answers": answer_result["data"].get("answers")
             }
+        }
     else:
         return {
             "success": False,
-            "error": f"Unexpected return type: {type(result)}",
-            "raw_output": result
+            "error": answer_result.get("error", "Unknown error"),
+            "raw_output": answer_result.get("raw_output")
         }
 
 

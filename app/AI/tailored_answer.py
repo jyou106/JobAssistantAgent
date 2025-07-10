@@ -33,34 +33,37 @@ def tailored_answer(profile_text: str, job_posting_url: str, questions: list) ->
         questions_text = "\n".join(f"{i+1}. {q}" for i, q in enumerate(questions))
         logging.debug(f"[TAILORED] Formatted questions:\n{questions_text}")
 
+        RUBRIC = """
+        Score buckets (use skill_overlap_ratio = intersection / required):
+        0.9-1.0  - 90-100 % of required skills AND 80 % experience match
+        0.7-0.9  - 70-89 % skills OR experience match
+        0.5-0.7  - 50-69 % match
+        0.3-0.5  - 30-49 % match
+        <0.3     - little relevance
+        """
+
         system_prompt = (
             "You are a career coach AI. Given a user's profile, a job description, and a list of application questions, "
-            "write a concise and compelling answer for each question tailored specifically to the user's background and the job requirements. "
-            "Return JSON exactly in this format:\n"
+            "write a concise and compelling answer for each question tailored specifically to the user's background and the job requirements.\n"
+            "You MUST also score the resume using this rubric based on skill and experience overlap:\n"
+            f"{RUBRIC}\n"
+            "Extract REQUIRED_SKILLS and PRESENT_SKILLS from job and profile respectively (max 20 items each).\n"
+            "Then compute skill_overlap_ratio = |intersection| / |REQUIRED_SKILLS|.\n"
+            "Return ONLY this JSON format, nothing else:\n"
             "{\n"
             '  "answers": [\n'
             '    {"question": "question 1 text", "answer": "tailored answer 1"},\n'
             '    {"question": "question 2 text", "answer": "tailored answer 2"},\n'
             '    ...\n'
             '  ],\n'
-            '  "overall_quality_score": 0.0\n'
+            '  "overall_quality_score": <float between 0 and 1>\n'
             "}\n"
-            "Only return this JSON, no extra commentary."
         )
 
         user_prompt = (
             f"User Profile:\n{profile_text}\n\n"
             f"Job Description:\n{job_description_text}\n\n"
             f"Application Questions:\n{questions_text}\n\n"
-            "Return ONLY a JSON object in this format:\n"
-            '{\n'
-            '  "answers": [\n'
-            '    {"question": "<question text>", "answer": "<tailored answer>"},\n'
-            '    ...\n'
-            '  ],\n'
-            '  "overall_quality_score": <float between 0 and 1>\n'
-            '}\n'
-            "Do not include any extra text or explanation."
         )
 
         logging.info("[TAILORED] Sending prompt to Fireworks...")
@@ -70,7 +73,7 @@ def tailored_answer(profile_text: str, job_posting_url: str, questions: list) ->
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            temperature=0.5,
+            temperature=0.0,
             max_tokens=1000
         )
 
