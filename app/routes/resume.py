@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.AI.agent import score_resume_workflow, tailored_answer_workflow, comprehensive_workflow
+from app.AI.agent import score_resume_workflow, tailored_answer_workflow
 from app.AI.schemas import ResumeScoreInputLegacy, TailoredAnswerInputLegacy
 from pydantic import BaseModel, HttpUrl
 import asyncio
@@ -46,7 +46,4 @@ def get_tailored_answers(request: TailoredAnswerInputLegacy):
         print("[TAILORED] Unexpected result type:", type(result))
         raise HTTPException(status_code=500, detail="Unexpected result format from tailored_answer_workflow")
 
-@router.post("/comprehensive")
-def comprehensive(request: ResumeScoreInputLegacy):
-    result = comprehensive_workflow(request.resume_text, request.job_posting_url, request.questions)
-    return {"result": result}
+

@@ -8,7 +8,6 @@ A FastAPI-based backend application that helps job seekers optimize their applic
 
 - **Resume Scoring**: Matches your resume against a job posting and gives feedback + a relevance score.
 - **Tailored Answer Generation**: Generates specific answers for job application questions based on your resume and the job description.
-- **Comprehensive Workflow**: Combines resume scoring and answer generation in one endpoint.
 
 ---
 

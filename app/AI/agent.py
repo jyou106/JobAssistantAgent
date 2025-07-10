@@ -124,38 +124,6 @@ def tailored_answer_workflow(profile_text: str, job_posting_url: str, questions:
         }
 
 
-def comprehensive_workflow(resume_text: str, job_posting_url: str, questions: list = None):
-    if questions:
-        questions_str = "\n".join([f"- {q}" for q in questions])
-        prompt = f"""
-        I need to perform a comprehensive job application analysis.
-
-        Resume: {resume_text}
-        Job URL: {job_posting_url}
-        Questions:
-        {questions_str}
-
-        Please:
-        1. Scrape the job description from the URL
-        2. Score the resume against the job description
-        3. Generate tailored answers for the questions
-        4. Return both the score and the answers
-        """
-    else:
-        prompt = f"""
-        I need to score a resume against a job posting.
-
-        Resume: {resume_text}
-        Job URL: {job_posting_url}
-
-        Please:
-        1. Scrape the job description from the URL
-        2. Score the resume against the job description
-        3. Return the match score and insights
-        """
-    result = agent.run(prompt)
-    return result
-
 # --- Example Usage ---
 def example_resume_scoring():
     resume_text = """AI Intern, Stylework
