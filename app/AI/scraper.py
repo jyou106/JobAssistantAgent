@@ -23,13 +23,13 @@ def fetch_job_description_and_qualifications(url: str) -> dict:
         time.sleep(3)
         soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        # Job boards selectors for main job description div
+        # Job boards
         possible_divs = [
             {"attrs": {"data-automation-id": "jobPostingDescription"}},       # Workday
             {"class_": "jobsearch-JobComponent-description"},                 # Indeed
             {"class_": "description"},                                        # Greenhouse
-            {"id": "job-description"},                                        # Generic fallback
-            {"class_": "description__text"},                                  # LinkedIn job description
+            {"class_": "section page-centered"},                              # Lever
+            {"id": "job-description"},                                        # generic
         ]
 
         jd_div = None
@@ -38,7 +38,7 @@ def fetch_job_description_and_qualifications(url: str) -> dict:
             if jd_div:
                 break
 
-        # Fallback: longest div by text length
+        # Fallback: longest div
         if not jd_div:
             divs = soup.find_all("div")
             jd_div = max(divs, key=lambda d: len(d.get_text(strip=True)), default=None)
