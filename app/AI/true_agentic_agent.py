@@ -77,10 +77,18 @@ class TrueAgenticCareerAgent:
             self.memories[user_id] = AgentMemory(user_id=user_id)
         return self.memories[user_id]
     
-    def autonomous_workflow(self, user_id: str, resume_text: str, job_url: str = None, questions: List[str] = None) -> Dict[str, Any]:
+    def autonomous_workflow(self, user_id: str, resume_text: str, job_url: str = None, questions: List[str] = None, recursion_depth: int = 0) -> Dict[str, Any]:
         """
         Main autonomous workflow - agent decides what to do
         """
+        # Safety check to prevent infinite recursion
+        if recursion_depth > 3:
+            return {
+                "success": False,
+                "error": "Maximum recursion depth exceeded",
+                "fallback_to_basic": True
+            }
+        
         memory = self.get_or_create_memory(user_id)
         
         # Store resume text in memory for future reference
@@ -113,8 +121,7 @@ class TrueAgenticCareerAgent:
         # Step 5: Agent learns from outcomes
         self.learn_from_outcome(results, memory)
         
-        # Step 6: Agent adapts strategy
-        self.adapt_strategy(memory, results)
+        # Step 6: Agent adapts strategy (already handled in execute_actions)
         
         # Organize results to eliminate redundancy
         organized_results = self.organize_results(results, situation)
@@ -236,8 +243,11 @@ class TrueAgenticCareerAgent:
             if situation.get("questions"):
                 actions.append(AgentAction.GENERATE_TAILORED_ANSWERS)
         
-        # Adapt strategy if previous attempts failed
-        if memory.outcomes and any(outcome.get("success") == False for outcome in memory.outcomes[-3:]):
+        # Adapt strategy only if there are previous outcomes and recent failures
+        # This prevents recursion on first run when no outcomes exist
+        if (memory.outcomes and 
+            len(memory.outcomes) >= 3 and 
+            any(outcome.get("success") == False for outcome in memory.outcomes[-3:])):
             actions.append(AgentAction.ADAPT_STRATEGY)
         
         return list(set(actions))  # Remove duplicates
@@ -247,7 +257,12 @@ class TrueAgenticCareerAgent:
         """Agent executes the decided actions"""
         results = {}
         
-        for action in actions:
+        # Separate ADAPT_STRATEGY from other actions to prevent recursion
+        strategy_adaptation_needed = AgentAction.ADAPT_STRATEGY in actions
+        other_actions = [action for action in actions if action != AgentAction.ADAPT_STRATEGY]
+        
+        # Execute all actions except ADAPT_STRATEGY
+        for action in other_actions:
             if action == AgentAction.ANALYZE_RESUME:
                 results["resume_analysis"] = self.perform_resume_analysis(situation)
             
@@ -266,14 +281,19 @@ class TrueAgenticCareerAgent:
             elif action == AgentAction.TRACK_PROGRESS:
                 results["progress"] = self.track_progress(memory)
             
-            elif action == AgentAction.ADAPT_STRATEGY:
-                results["strategy_adaptation"] = self.adapt_strategy(memory, results)
-            
             elif action == AgentAction.SCORE_RESUME:
                 results["resume_scoring"] = self.perform_resume_scoring(situation, memory)
             
             elif action == AgentAction.GENERATE_TAILORED_ANSWERS:
                 results["tailored_answers"] = self.generate_tailored_answers(situation, memory)
+        
+        # Execute ADAPT_STRATEGY separately after all other actions are complete
+        if strategy_adaptation_needed:
+            self.adapt_strategy(memory, results)
+            results["strategy_adaptation"] = {
+                "status": "adapted",
+                "timestamp": datetime.now().isoformat()
+            }
         
         return results
     
@@ -367,6 +387,16 @@ class TrueAgenticCareerAgent:
     
     def adapt_strategy(self, memory: AgentMemory, results: Dict[str, Any]):
         """Agent adapts its strategy based on outcomes"""
+        # Safety check: only adapt if there are outcomes and we haven't adapted recently
+        if not memory.outcomes or len(memory.outcomes) < 2:
+            return
+        
+        # Check if we've already adapted recently (within last 5 minutes)
+        recent_strategies = [s for s in memory.strategies 
+                           if (datetime.now() - s.get("timestamp", datetime.now())).total_seconds() < 300]
+        if recent_strategies:
+            return
+        
         # Analyze recent outcomes
         recent_outcomes = memory.outcomes[-5:] if memory.outcomes else []
         
@@ -789,7 +819,7 @@ true_agentic_agent = TrueAgenticCareerAgent()
 def autonomous_career_workflow(user_id: str, resume_text: str, job_url: str = None, questions: List[str] = None) -> Dict[str, Any]:
     """Main entry point for autonomous career agent"""
     try:
-        result = true_agentic_agent.autonomous_workflow(user_id, resume_text, job_url, questions)
+        result = true_agentic_agent.autonomous_workflow(user_id, resume_text, job_url, questions, recursion_depth=0)
         return result
     except Exception as e:
         logging.error(f"Autonomous workflow failed: {e}")
