@@ -5,7 +5,7 @@ builtins.Annotated = Annotated
 import os
 from dotenv import load_dotenv
 from langchain.agents import initialize_agent, AgentType, AgentExecutor
-from langchain_community.chat_models import ChatOpenAI
+# Removed unused ChatOpenAI import to avoid version conflicts
 from langchain.tools import Tool, StructuredTool          
 from .scraper import scrape_job_description
 from .scorer import score_resume_tool, score_resume
@@ -26,42 +26,35 @@ if not FIREWORKS_API_KEY:
     raise RuntimeError("FIREWORKS_API_KEY not set in environment variables or .env file.")
 fw = Fireworks(api_key=FIREWORKS_API_KEY)
 
-# Structured tool for resume scoring
-score_resume_structured = StructuredTool.from_function(
+# Simple tool definitions to avoid Pydantic schema issues
+from langchain.tools import Tool
+
+score_resume_tool_simple = Tool(
     name="score_resume",
-    func=score_resume_tool,
-    args_schema=ResumeScoreInputLegacy,
+    func=lambda input_str: score_resume_tool(input_str),
     description=(
         "Score a resume against a job description. "
-        "Input object must contain: resume_text (string) and "
-        "job_posting_url (string). Returns match_score and insights."
-    ),
-    return_direct=False
+        "Input should be a string with resume text and job URL separated by '||'"
+    )
 )
 
-
-# Standard tools (non-structured)
-scrape_job_description_tool = StructuredTool.from_function(
+scrape_job_description_tool_simple = Tool(
     name="scrape_job_description",
     func=scrape_job_description,
-    args_schema=ScrapeJobInput,  
-    description="Scrape and extract the job description from a job posting URL.",
-    return_direct=True 
+    description="Scrape and extract the job description from a job posting URL. Input: URL string"
 )
 
-tailored_answer_tool_structured = StructuredTool.from_function(
-    name="tailored_answer",
-    func=tailored_answer,
-    args_schema=TailoredAnswerInput,
-    description="Given a job title and resume text, return a tailored answer to help the user prepare.",
-    return_direct=True
+tailored_answer_tool_simple = Tool(
+    name="tailored_answer", 
+    func=lambda input_str: tailored_answer_tool(input_str),
+    description="Generate tailored answers for job application questions. Input: profile||job_url||questions"
 )
 
 
 tools = [
-    scrape_job_description_tool,
-    score_resume_structured,
-    tailored_answer_tool_structured
+    scrape_job_description_tool_simple,
+    score_resume_tool_simple,
+    tailored_answer_tool_simple
 ]
 
 

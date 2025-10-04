@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "AI Career Assistant - Resume Matcher",
+  "version": "1.0.0",
+  "description": "AI-powered resume matching and career insights directly on job posting pages",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://*.workday.com/*",
+    "https://*.myworkdayjobs.com/*",
+    "https://*.indeed.com/*",
+    "https://*.linkedin.com/*",
+    "https://*.glassdoor.com/*",
+    "https://*.lever.co/*",
+    "https://*.greenhouse.io/*",
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.workday.com/*",
+        "https://*.myworkdayjobs.com/*",
+        "https://*.indeed.com/*",
+        "https://*.linkedin.com/*",
+        "https://*.glassdoor.com/*",
+        "https://*.lever.co/*",
+        "https://*.greenhouse.io/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Career Assistant"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

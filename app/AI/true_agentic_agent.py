@@ -595,7 +595,14 @@ class TrueAgenticCareerAgent:
     def track_progress(self, memory: AgentMemory) -> Dict[str, Any]:
         """Agent autonomously tracks progress"""
         if not memory.outcomes:
-            return {"status": "new_user", "progress": 0}
+            return {
+                "status": "new_user", 
+                "progress": 0,
+                "overall_progress": 0,
+                "recent_improvements": 0,
+                "goals_achieved": 0,
+                "next_milestone": "complete_initial_assessment"
+            }
         
         recent_outcomes = memory.outcomes[-5:]
         success_rate = sum(1 for outcome in recent_outcomes 
@@ -605,7 +612,7 @@ class TrueAgenticCareerAgent:
             "overall_progress": success_rate,
             "recent_improvements": len([o for o in recent_outcomes if o.get("success_indicators", {}).get("improvement", False)]),
             "goals_achieved": len([o for o in recent_outcomes if o.get("success_indicators", {}).get("goal_achieved", False)]),
-            "next_milestone": self.determine_next_milestone(memory)
+            "next_milestone": "continue_development"  # Simple milestone to avoid recursion
         }
     
     def extract_success_indicators(self, results: Dict[str, Any]) -> Dict[str, Any]:
@@ -678,11 +685,18 @@ class TrueAgenticCareerAgent:
         if not memory.outcomes:
             return "complete_initial_assessment"
         
-        recent_progress = self.track_progress(memory)
+        # Calculate progress directly without calling track_progress to avoid recursion
+        recent_outcomes = memory.outcomes[-5:] if memory.outcomes else []
+        if not recent_outcomes:
+            return "complete_initial_assessment"
+            
+        success_rate = sum(1 for outcome in recent_outcomes 
+                          if outcome.get("success_indicators", {}).get("overall_success", False)) / len(recent_outcomes)
+        goals_achieved = len([o for o in recent_outcomes if o.get("success_indicators", {}).get("goal_achieved", False)])
         
-        if recent_progress["overall_progress"] < 0.5:
+        if success_rate < 0.5:
             return "improve_basic_skills"
-        elif recent_progress["goals_achieved"] < 2:
+        elif goals_achieved < 2:
             return "achieve_career_goals"
         else:
             return "advance_to_next_level"

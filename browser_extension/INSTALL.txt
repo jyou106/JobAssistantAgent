@@ -1,0 +1,28 @@
+🚀 AI Career Assistant - Quick Install Guide
+
+STEP 1: Install the Extension
+1. Open Chrome browser
+2. Go to: chrome://extensions/
+3. Enable "Developer mode" (top-right toggle)
+4. Click "Load unpacked"
+5. Select THIS folder: browser_extension
+6. Extension should now appear in your toolbar
+
+STEP 2: Start Your Backend
+1. Make sure your FastAPI server is running:
+   cd JobAssistantAgent
+   uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+STEP 3: Test the Extension
+1. Go to any job posting (try: workday.com, indeed.com, linkedin.com/jobs)
+2. Look for the AI widget on the right side of the page
+3. Click the extension icon in your toolbar to see the popup
+4. Upload your resume and start analyzing jobs!
+
+TROUBLESHOOTING:
+- If extension doesn't load: Check that Developer mode is enabled
+- If no widget appears: Refresh the job posting page
+- If analysis fails: Make sure FastAPI backend is running on port 8000
+
+Your AI Career Assistant is ready to revolutionize your job search! 🤖
+
