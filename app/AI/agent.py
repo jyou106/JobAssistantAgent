@@ -60,7 +60,7 @@ tools = [
 
 # Initialize the LLM
 llm = ChatFireworks(
-    model="accounts/fireworks/models/llama-v3p1-8b-instruct",
+    model="accounts/fireworks/models/gpt-oss-20b",
     temperature=0.0,
 )
 

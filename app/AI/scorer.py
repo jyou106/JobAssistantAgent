@@ -54,7 +54,7 @@ Job Description:
 """
 
     response = fw.chat.completions.create(
-        model="accounts/fireworks/models/llama-v3p1-8b-instruct",
+        model="accounts/fireworks/models/gpt-oss-20b",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}

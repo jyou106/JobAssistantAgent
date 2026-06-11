@@ -431,7 +431,7 @@ class TrueAgenticCareerAgent:
             """
             
             response = fw.chat.completions.create(
-                model="accounts/fireworks/models/llama-v3p1-8b-instruct",
+                model="accounts/fireworks/models/gpt-oss-20b",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
                 max_tokens=500
@@ -486,7 +486,7 @@ class TrueAgenticCareerAgent:
             """
             
             response = fw.chat.completions.create(
-                model="accounts/fireworks/models/llama-v3p1-8b-instruct",
+                model="accounts/fireworks/models/gpt-oss-20b",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
                 max_tokens=300
